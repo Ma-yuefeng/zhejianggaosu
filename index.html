@@ -1,0 +1,206 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>智能充电桩 IoT 实时运行弹窗</title>
+    <style>
+        *{margin:0;padding:0;box-sizing:border-box;font-family:"Microsoft Yahei",sans-serif;}
+        /* 弹窗遮罩 */
+        .mask{
+            position: fixed;
+            top: 0;left: 0;
+            width: 100%;height: 100%;
+            background: rgba(0,0,0,0.5);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            z-index: 999;
+        }
+        /* 弹窗主体 */
+        .charge-popup{
+            width: 420px;
+            background: #fff;
+            border-radius: 12px;
+            box-shadow: 0 4px 20px rgba(0,0,0,0.15);
+            overflow: hidden;
+        }
+        /* 弹窗头部 */
+        .popup-header{
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            padding: 16px 20px;
+            background: #1677ff;
+            color: #fff;
+        }
+        .header-title{font-size: 16px;font-weight: 600;}
+        .close-btn{
+            cursor: pointer;
+            font-size: 20px;
+            line-height: 1;
+            opacity: 0.8;
+        }
+        .close-btn:hover{opacity: 1;}
+        /* 设备基础信息 */
+        .device-info{
+            padding: 15px 20px;
+            border-bottom: 1px solid #eee;
+        }
+        .info-row{
+            display: flex;
+            justify-content: space-between;
+            margin: 8px 0;
+            font-size: 14px;
+        }
+        .status-tag{
+            display: inline-block;
+            padding: 2px 8px;
+            border-radius: 4px;
+            color: #fff;
+            font-size: 12px;
+        }
+        .status-normal{background: #00b42a;}
+        .status-fault{background: #f53f3f;}
+        .status-idle{background: #86909c;}
+        /* 实时运行数据区 */
+        .data-box{
+            padding: 20px;
+        }
+        .data-title{
+            font-size: 15px;
+            color: #333;
+            margin-bottom: 15px;
+            font-weight: 500;
+        }
+        .data-grid{
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 16px;
+        }
+        .data-item{
+            background: #f7f8fa;
+            padding: 12px;
+            border-radius: 8px;
+            text-align: center;
+        }
+        .data-label{
+            font-size: 13px;
+            color: #666;
+            margin-bottom: 6px;
+        }
+        .data-value{
+            font-size: 18px;
+            font-weight: 600;
+            color: #1677ff;
+        }
+        /* 底部提示 */
+        .popup-footer{
+            padding: 12px 20px;
+            background: #f7f8fa;
+            font-size: 12px;
+            color: #999;
+            text-align: right;
+        }
+    </style>
+</head>
+<body>
+<div class="mask">
+    <div class="charge-popup">
+        <!-- 头部 -->
+        <div class="popup-header">
+            <div class="header-title">智能充电桩 - IoT 实时运行监控</div>
+            <div class="close-btn" onclick="this.parentElement.parentElement.parentElement.style.display='none'">×</div>
+        </div>
+        <!-- 设备基础信息 -->
+        <div class="device-info">
+            <div class="info-row">
+                <span>设备编号：</span>
+                <span>C-PILE-20260612-008</span>
+            </div>
+            <div class="info-row">
+                <span>设备位置：</span>
+                <span>园区A区 3号车位</span>
+            </div>
+            <div class="info-row">
+                <span>运行状态：</span>
+                <span class="status-tag status-normal" id="runStatus">正常充电中</span>
+            </div>
+            <div class="info-row">
+                <span>在线状态：</span>
+                <span>IoT 在线</span>
+            </div>
+        </div>
+        <!-- 实时数据 -->
+        <div class="data-box">
+            <div class="data-title">实时运行参数</div>
+            <div class="data-grid">
+                <div class="data-item">
+                    <div class="data-label">实时电压 (V)</div>
+                    <div class="data-value" id="volt">380.0</div>
+                </div>
+                <div class="data-item">
+                    <div class="data-label">实时电流 (A)</div>
+                    <div class="data-value" id="current">45.2</div>
+                </div>
+                <div class="data-item">
+                    <div class="data-label">输出功率 (kW)</div>
+                    <div class="data-value" id="power">17.18</div>
+                </div>
+                <div class="data-item">
+                    <div class="data-label">设备温度 (℃)</div>
+                    <div class="data-value" id="temp">32.5</div>
+                </div>
+                <div class="data-item">
+                    <div class="data-label">累计电量 (kWh)</div>
+                    <div class="data-value" id="totalElec">216.75</div>
+                </div>
+                <div class="data-item">
+                    <div class="data-label">充电时长 (min)</div>
+                    <div class="data-value" id="chargeTime">28</div>
+                </div>
+            </div>
+        </div>
+        <!-- 底部刷新时间 -->
+        <div class="popup-footer">
+            数据刷新时间：<span id="refreshTime">2026-06-12 15:30:22</span>
+        </div>
+    </div>
+</div>
+
+<script>
+// 模拟IoT实时数据自动刷新
+function refreshData(){
+    // 电压 378~382V 浮动
+    let volt = (378 + Math.random()*4).toFixed(1);
+    // 电流 44~47A 浮动
+    let current = (44 + Math.random()*3).toFixed(1);
+    // 功率计算
+    let power = (volt * current / 1000).toFixed(2);
+    // 温度 32~34℃
+    let temp = (32 + Math.random()*2).toFixed(1);
+    // 累计电量缓慢增长
+    let totalElec = (216.75 + Math.random()*0.1).toFixed(2);
+    // 充电时长自增
+    let timeDom = document.getElementById('chargeTime');
+    let chargeTime = parseInt(timeDom.innerText) + 1;
+
+    // 赋值
+    document.getElementById('volt').innerText = volt;
+    document.getElementById('current').innerText = current;
+    document.getElementById('power').innerText = power;
+    document.getElementById('temp').innerText = temp;
+    document.getElementById('totalElec').innerText = totalElec;
+    document.getElementById('chargeTime').innerText = chargeTime;
+
+    // 更新刷新时间
+    let now = new Date();
+    let timeStr = `${now.getFullYear()}-${String(now.getMonth()+1).padStart(2,'0')}-${String(now.getDate()).padStart(2,'0')} ${String(now.getHours()).padStart(2,'0')}:${String(now.getMinutes()).padStart(2,'0')}:${String(now.getSeconds()).padStart(2,'0')}`;
+    document.getElementById('refreshTime').innerText = timeStr;
+}
+
+// 每2秒自动刷新IoT数据
+setInterval(refreshData, 2000);
+</script>
+</body>
+</html>
