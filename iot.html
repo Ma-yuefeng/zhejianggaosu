@@ -1,0 +1,233 @@
+
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8">
+<title>水电表IoT实时数据弹窗</title>
+<style>
+*{margin:0;padding:0;box-sizing:border-box;font-family:Microsoft Yahei,sans-serif}
+body{background:#0a101f}
+/* 弹窗遮罩层 */
+.mask-layer{
+    position:fixed;
+    top:0;left:0;
+    width:100vw;height:100vh;
+    background:rgba(0,0,0,0.65);
+    display:flex;
+    align-items:center;
+    justify-content:center;
+    z-index:9999;
+}
+/* 弹窗主体 */
+.iot-popup{
+    width:620px;
+    background:linear-gradient(180deg,#0f203a,#081426);
+    border:1px solid #328bff;
+    border-radius:10px;
+    box-shadow:0 0 25px rgba(50,139,255,0.22);
+    overflow:hidden;
+}
+/* 弹窗头部 */
+.pop-header{
+    display:flex;
+    justify-content:space-between;
+    align-items:center;
+    padding:14px 20px;
+    background:rgba(50,139,255,0.12);
+    border-bottom:1px solid #328bff;
+}
+.pop-title{
+    font-size:18px;
+    color:#73d0ff;
+    font-weight:50;
+}
+.close-btn{
+    width:26px;height:26px;
+    text-align:center;
+    line-height:26px;
+    color:#b4d8ff;
+    font-size:22px;
+    cursor:pointer;
+    border-radius:4px;
+}
+.close-btn:hover{
+    background:rgba(255,80,80,0.25);
+    color:#ff5050;
+}
+/* 内容容器 */
+.pop-content{
+    padding:18px 20px;
+    display:grid;
+    grid-template-columns:1fr 1fr;
+    gap:16px;
+}
+/* 水电通用卡片 */
+.data-card{
+    background:rgba(16,40,72,0.6);
+    border-radius:8px;
+    padding:16px;
+    border:1px solid rgba(50,139,255,0.2);
+}
+.card-title{
+    display:flex;
+    align-items:center;
+    gap:8px;
+    font-size:16px;
+    color:#fff;
+    margin-bottom:14px;
+    padding-bottom:8px;
+    border-bottom:1px solid rgba(50,139,255,0.18);
+}
+.icon-water{color:#28d0f0}
+.icon-power{color:#ffc838}
+.data-row{
+    display:flex;
+    justify-content:space-between;
+    font-size:13px;
+    margin:10px 0;
+}
+.label{color:#a0c8f0}
+.val-normal{color:#fff;font-weight:bold}
+.val-warn{color:#ff4c4c;font-weight:bold}
+.val-num{font-size:16px}
+/* 底部采集时间 */
+.pop-footer{
+    padding:10px 20px;
+    text-align:right;
+    font-size:12px;
+    color:#789fc8;
+    border-top:1px solid rgba(50,139,255,0.15);
+}
+</style>
+</head>
+<body>
+<!-- IoT水电实时弹窗 -->
+<div class="mask-layer" id="mask">
+    <div class="iot-popup">
+        <!-- 头部 -->
+        <div class="pop-header">
+            <div class="pop-title">水电表IoT实时采集数据</div>
+            <div class="close-btn" id="closeBtn">×</div>
+        </div>
+        <!-- 水电数据区域 -->
+        <div class="pop-content">
+            <!-- 水表卡片 -->
+            <div class="data-card">
+                <div class="card-title">
+                    <span class="icon-water">💧</span>智能水表 WS-0712
+                </div>
+                <div class="data-row">
+                    <span class="label">设备编号</span>
+                    <span class="val-normal">WS-YN-20260623-0712</span>
+                </div>
+                <div class="data-row">
+                    <span class="label">瞬时流量(m³/h)</span>
+                    <span class="val-normal val-num" id="waterFlow">0.86</span>
+                </div>
+                <div class="data-row">
+                    <span class="label">今日累计用水量(m³)</span>
+                    <span class="val-normal val-num" id="waterDay">12.47</span>
+                </div>
+                <div class="data-row">
+                    <span class="label">总累计用水量(m³)</span>
+                    <span class="val-normal val-num" id="waterTotal">286.32</span>
+                </div>
+                <div class="data-row">
+                    <span class="label">设备状态</span>
+                    <span class="val-normal">正常在线</span>
+                </div>
+                <div class="data-row">
+                    <span class="label">告警信息</span>
+                    <span class="val-normal">无漏水告警</span>
+                </div>
+            </div>
+            <!-- 电表卡片 -->
+            <div class="data-card">
+                <div class="card-title">
+                    <span class="icon-power">⚡</span>智能电表 DT-1409
+                </div>
+                <div class="data-row">
+                    <span class="label">设备编号</span>
+                    <span class="val-normal">DT-YN-20260623-1409</span>
+                </div>
+                <div class="data-row">
+                    <span class="label">瞬时功率(kW)</span>
+                    <span class="val-normal val-num" id="elePower">42.75</span>
+                </div>
+                <div class="data-row">
+                    <span class="label">今日用电量(kWh)</span>
+                    <span class="val-normal val-num" id="eleDay">168.92</span>
+                </div>
+                <div class="data-row">
+                    <span class="label">总累计电量(kWh)</span>
+                    <span class="val-normal val-num" id="eleTotal">14862.50</span>
+                </div>
+                <div class="data-row">
+                    <span class="label">运行状态</span>
+                    <span class="val-normal">在线计量</span>
+                </div>
+                <div class="data-row">
+                    <span class="label">告警信息</span>
+                    <span class="val-normal">无过载异常</span>
+                </div>
+            </div>
+        </div>
+        <!-- 底部采集时间 -->
+        <div class="pop-footer">
+            IoT数据采集时间：<span id="collectTime">2026-06-23 15:42:16</span>
+        </div>
+    </div>
+</div>
+
+<script>
+// 获取DOM元素
+const mask = document.getElementById('mask');
+const closeBtn = document.getElementById('closeBtn');
+const waterFlow = document.getElementById('waterFlow');
+const waterDay = document.getElementById('waterDay');
+const waterTotal = document.getElementById('eleTotal');
+const elePower = document.getElementById('elePower');
+const eleDay = document.getElementById('eleDay');
+const eleTotal = document.getElementById('eleTotal');
+const collectTime = document.getElementById('collectTime');
+
+// 关闭弹窗
+closeBtn.addEventListener('click',()=>{
+    mask.style.display = 'none';
+})
+
+// 实时刷新IoT水电数据 3秒一轮
+function refreshIoTData(){
+    // 水表随机波动
+    let flow = (Math.random()*1.2+0.3).toFixed(2);
+    let wDay = (parseFloat(waterDay.innerText)+Math.random()*0.03).toFixed(2);
+    let wTotal = (parseFloat(waterTotal.innerText)+Math.random()*0.05).toFixed(2);
+    waterFlow.innerText = flow;
+    waterDay.innerText = wDay;
+    waterTotal.innerText = wTotal;
+
+    // 电表随机波动
+    let power = (Math.random()*30+25).toFixed(2);
+    let eDay = (parseFloat(eleDay.innerText)+Math.random()*0.12).toFixed(2);
+    let eTotal = (parseFloat(eleTotal.innerText)+Math.random()*0.18).toFixed(2);
+    elePower.innerText = power;
+    eleDay.innerText = eDay;
+    eleTotal.innerText = eTotal;
+
+    // 更新采集时间
+    const now = new Date();
+    const year = now.getFullYear();
+    const m = String(now.getMonth()+1).padStart(2,'0');
+    const d = String(now.getDate()).padStart(2,'0');
+    const h = String(now.getHours()).padStart(2,'0');
+    const mi = String(now.getMinutes()).padStart(2,'0');
+    const s = String(now.getSeconds()).padStart(2,'0');
+    collectTime.innerText = `${year}-${m}-${d} ${h}:${mi}:${s}`;
+}
+
+// 3秒自动刷新模拟IoT实时上传
+setInterval(refreshIoTData,3000);
+refreshIoTData();
+</script>
+</body>
+</html>
